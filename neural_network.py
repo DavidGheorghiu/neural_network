@@ -1,70 +1,80 @@
-import json
-import math
-import random
+import numpy
 
-def appendToFile(textFile, data):
-    input = open(textFile, 'a+')
-    input.write(data)
-
-def openFile(textFile):
-    input = open(textFile)
-    return input
-
-def sigmoid(x):
-    return 1 / (1 + math.exp(-x))
-
-def cost(prediction, target):
-    return (prediction - target) ** 2
-
-# ['gender'] => 0 = male | 1 = female
+#our data
+#[height, age, gender(0=male, 1=female)]
 data = [
-    {
-        'height': 180,
-        'age': 20,
-        'gender': 0
-    },
-    {
-        'height': 165,
-        'age': 18,
-        'gender': 1
-    },
-    {
-        'height': 195,
-        'age': 26,
-        'gender': 0
-    },
-    {
-        'height': 143,
-        'age': 20,
-        'gender': 1
-    },
-    {
-        'height': 120,
-        'age': 19,
-        'gender': 1
-    },
-    {
-        'height': 175,
-        'age': 16,
-        'gender': 0
-    }
+    [180, 21, 0],
+    [169, 17, 1],
+    [153, 13, 1],
+    [176, 20, 0],
+    [172, 35, 1],
+    [195, 26, 0],
+    [160, 16, 1],
+    [180, 41, 0]
 ]
 
-#appendToFile('python/data-file.json', json.dumps(data))
+# sigmoid function (activiation function)
+def sigmoid(x):
+    return (1 / (1 + numpy.exp(-x)))
 
+#derivative of sigmoid function
+def d_sigmoid(x):
+    return (sigmoid(x)*(1 - sigmoid(x)))
+
+#derivative of cost function (prediction - target) ** 2
+def d_cost(prediction, target):
+    return (2 * (prediction - target))
+
+#train the computer giving it our data
 def train():
-    w1 = random.uniform(0, 1)*0.2-0.1
-    w2 = random.uniform(0, 1)*0.2-0.1
-    b = random.uniform(0, 1)*0.2-0.1
-    learning_rate = 0.2
-    for i in range(10000):
-        data_entry = data[0]
+    #initially pick random numbers for our weights and bias
+    w1 = numpy.random.randn()*0.1
+    w2 = numpy.random.randn()*0.1
+    b = numpy.random.randn()*0.1
 
-        z = (data_entry['height']*w1) + (data_entry['age']*w2) + b
-        prediction = sigmoid(z)
-        error_cost = cost(prediction, data_entry['gender'])
+    #how fast we want the computer to learn
+    learning_rate = 0.15
+    for i in range(20000):
+        #pick a random data entry
+        randomDataEntry = data[numpy.random.randint(len(data))]
         
-        if(i%1000 == 0):
-            print(prediction)
+        # apply weights to data entry
+        z = randomDataEntry[0]*w1 + randomDataEntry[1]*w2 + b
+        
+        #get prediction and target
+        prediction = sigmoid(z)
+        target = randomDataEntry[2]
+        
+        # -- DERIVATIVE CALCULATIONS --
 
-train()
+        #get derivative cost error
+        dcost = d_cost(prediction, target)
+        
+        #get derivative prediction
+        d_prediction = d_sigmoid(z)
+        
+        #derivative of our points with respect to weights (including bias)
+        d_w1 = randomDataEntry[0]
+        d_w2 = randomDataEntry[1]
+        d_b = 1
+
+        #derivative cost with respect to the derivative points
+        dcost_dw1 = dcost * d_prediction * d_w1
+        dcost_dw2 = dcost * d_prediction * d_w2
+        dcost_db = dcost * d_prediction * d_b
+        
+        #update weights and biases
+        w1 -= dcost_dw1 * learning_rate
+        w2 -= dcost_dw2 * learning_rate
+        b -= dcost_db * learning_rate
+
+    #finally we return our adjusted weights and bias
+    return [w1, w2, b]
+
+#test prediction on
+learned = train()
+
+#data on female so our prediction should be close to 1
+z = 160*learned[0] + 21*learned[1] + learned[2]
+prediction = sigmoid(z)
+print(prediction)
