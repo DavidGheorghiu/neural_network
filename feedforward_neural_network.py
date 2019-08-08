@@ -75,6 +75,6 @@ def train():
 learned = train()
 
 #data on female so our prediction should be close to 1
-z = 1.76*learned[0] + 3.1*learned[1] + learned[2]
+z = 1.56*learned[0] + 2.3*learned[1] + learned[2]
 prediction = sigmoid(z)
 print(prediction)
